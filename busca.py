@@ -18,7 +18,7 @@ def get_publicacoes(url):
     driver.get('https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin')
     try:
         if user and password:
-            WebDriverWait(driver, 20).until(
+            WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.ID, 'username'))
             )
             field_user = driver.find_element(By.ID, 'username')
@@ -27,14 +27,14 @@ def get_publicacoes(url):
             field_password.send_keys(password)
             field_password.submit()
 
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'global-nav-typeahead')))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'global-nav-typeahead')))
 
         driver.get(url)
 
         last_height = driver.execute_script("return document.body.scrollHeight")
         while True:
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(10)
+            time.sleep(7)
             new_height = driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
                 break
@@ -67,8 +67,12 @@ def get_publicacoes(url):
             texto_publicacao = post.find(class_='update-components-text')
             if texto_publicacao:
                 publicacao['texto_postagem'] = texto_publicacao.get_text().strip()
-                publicacao['idioma_postagem'] = detect(publicacao['texto_postagem'])
+                if len(publicacao['texto_postagem']) > 10:
+                    publicacao['idioma_postagem'] = detect(publicacao['texto_postagem'])
+                else:
+                    publicacao['idioma_postagem'] = 'N/A'
                 publicacao['tamanho_texto_postagem'] = len(publicacao['texto_postagem'])
+
             else:
                 publicacao['texto_postagem'] = ' '
                 publicacao['idioma_postagem'] = 'N/A'
@@ -105,7 +109,7 @@ def get_publicacoes(url):
 
         df = pd.DataFrame(lista_posts)
 
-        nome_arquivo = f'./urls-{datetime.today().strftime("%Y-%m-%dT%H%M%S")}.xlsx'
+        nome_arquivo = f'./cibse_artigo-{datetime.today().strftime("%Y-%m-%dT%H%M%S")}.xlsx'
         df.to_excel(nome_arquivo, index=False)
 
         return lista_posts
@@ -113,8 +117,6 @@ def get_publicacoes(url):
     finally:
         driver.quit()
 
-
-url = 'https://www.linkedin.com/search/results/content/?keywords=%22simposio%20brasileiro%20de%20engenharia%20de%20software%22&origin=SWITCH_SEARCH_VERTICAL&sid=TAC'
-
+url = 'https://www.linkedin.com/search/results/content/?keywords=cibse%20artigo&origin=FACETED_SEARCH&sid=pTA&sortBy=%22date_posted%22'
 publicacoes = get_publicacoes(url)
 print(publicacoes)
