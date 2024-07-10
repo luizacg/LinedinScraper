@@ -11,7 +11,6 @@ import pandas as pd
 user = 'luizacmg2@gmail.com'
 password = 'Gavop099'
 
-
 def get_publicacoes(url):
 
     driver = webdriver.Chrome()
@@ -39,6 +38,10 @@ def get_publicacoes(url):
             if new_height == last_height:
                 break
             last_height = new_height
+
+        # Rolar de volta ao topo da página
+        driver.execute_script("window.scrollTo(0, 0);")
+        time.sleep(2)
 
         lista_posts = []
 
@@ -90,7 +93,6 @@ def get_publicacoes(url):
             if comentarios:
                 publicacao['num_comentarios'] = comentarios.get_text().strip().split(' ')[0]
 
-
             publicacao['num_compartilhamentos'] = 0
             compartilhamentos = post.select('.social-details-social-counts__item .ember-view')
             if compartilhamentos:
@@ -98,13 +100,38 @@ def get_publicacoes(url):
 
             publicacao['num_imagens'] = len(post.select('.update-components-image__image'))
 
-            url_postagem = post.find('a', href=True)
-            if url_postagem:
-                publicacao['url_postagem'] = url_postagem['href']
+            url_perfil = post.find('a', href=True)
+            if url_perfil:
+                publicacao['url_perfil'] = url_perfil['href']
             else:
-                publicacao['url_postagem'] = 'N/A'
+                publicacao['url_perfil'] = 'N/A'
 
             lista_posts.append(publicacao)
+
+        posts = driver.find_elements(By.CLASS_NAME, 'feed-shared-update-v2')
+        for i, post in enumerate(posts):
+            try:
+                driver.execute_script("window.scrollTo(0, 0);")
+                time.sleep(2)
+
+                menu_button = WebDriverWait(post, 20).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'button.feed-shared-control-menu__trigger'))
+                )
+                menu_button.click()
+                time.sleep(10)
+
+                menu_options = WebDriverWait(driver, 20).until(
+                    EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@class, 'artdeco-dropdown__content-inner')]//li"))
+                )
+                if len(menu_options) > 1:
+                    second_option = menu_options[1]
+                    second_option.click()
+                    time.sleep(5)
+
+                    lista_posts[i]['url_post'] = driver.execute_script("return navigator.clipboard.readText()")
+
+            except Exception as e:
+                print(e)
 
             time.sleep(1)
 
