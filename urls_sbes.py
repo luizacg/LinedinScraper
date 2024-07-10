@@ -8,8 +8,8 @@ from selenium.webdriver.common.by import By
 
 lista_publicacoes = []
 
-user = 'luiza2@gmail.com'
-password = 'Gavop099'
+user = ''
+password = ''
 
 driver = webdriver.Chrome()
 driver.get('https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin')

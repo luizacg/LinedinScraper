@@ -8,8 +8,8 @@ from datetime import datetime
 import time
 import pandas as pd
 
-user = 'luizacmg2@gmail.com'
-password = 'Gavop099'
+user = ''
+password = ''
 
 
 def get_publicacoes(url):
