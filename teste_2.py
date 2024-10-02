@@ -10,7 +10,8 @@ import pandas as pd
 user = 'luizacmg2@gmail.com'
 password = 'Gavop099'
 
-def get_publicacoes(url):
+def extrair_urls_posts(url):
+
     driver = webdriver.Chrome()
     driver.get('https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin')
     try:
@@ -24,8 +25,7 @@ def get_publicacoes(url):
             field_password.send_keys(password)
             field_password.submit()
 
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.ID, 'global-nav-typeahead')))
-
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'global-nav-typeahead')))
         driver.get(url)
 
         last_height = driver.execute_script("return document.body.scrollHeight")
@@ -37,19 +37,17 @@ def get_publicacoes(url):
                 break
             last_height = new_height
 
-        # Scroll back to the top of the page
         driver.execute_script("window.scrollTo(0, 0);")
-        time.sleep(2)
+        time.sleep(5)
 
-        lista_posts = []
-
-        # Capture page source after scrolling back to the top
-        source = driver.page_source
+        urls_posts = []
 
         posts = driver.find_elements(By.CLASS_NAME, 'feed-shared-update-v2')
         for post in posts:
-            publicacao = {}
             try:
+                driver.execute_script("window.scrollTo(0, 0);")
+                time.sleep(3)
+
                 menu_button = WebDriverWait(post, 20).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, 'button.feed-shared-control-menu__trigger'))
                 )
@@ -64,23 +62,22 @@ def get_publicacoes(url):
                     second_option.click()
                     time.sleep(5)
 
-                    publicacao['link'] = driver.execute_script("return navigator.clipboard.readText()")
+                    url_post = driver.execute_script("return navigator.clipboard.readText()")
+                    urls_posts.append({'url_post': url_post})
 
             except Exception as e:
                 print(e)
-
-            lista_posts.append(publicacao)
             time.sleep(1)
 
-        df = pd.DataFrame(lista_posts)
-        nome_arquivo = f'./cibse_artigo-{datetime.today().strftime("%Y-%m-%dT%H%M%S")}.xlsx'
-        df.to_excel(nome_arquivo, index=False)
-
-        return lista_posts
+        df_urls = pd.DataFrame(urls_posts)
+        nome_arquivo_urls = f'./urls_international-conference-on-software-engineering-{datetime.today().strftime("%Y-%m-%dT%H%M%S")}.xlsx'
+        df_urls.to_excel(nome_arquivo_urls, index=False)
+        print(f"URLs salvas em {nome_arquivo_urls}")
 
     finally:
         driver.quit()
 
-url = 'https://www.linkedin.com/search/results/content/?keywords=cibse%20artigo&origin=FACETED_SEARCH&sid=pTA&sortBy=%22date_posted%22'
-publicacoes = get_publicacoes(url)
-print(publicacoes)
+# URL da pesquisa
+url = 'https://www.linkedin.com/search/results/content/?keywords=%22international%20conference%20on%20software%20engineering%22&origin=FACETED_SEARCH&sid=K!g&sortBy=%22date_posted%22'
+extrair_urls_posts(url)
+
